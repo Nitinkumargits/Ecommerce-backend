@@ -29,4 +29,4 @@ jobs:
           #platforms: linux/arm64/v8,linux/amd64,linux/arm/v7
           platforms: linux/amd64
           push: true
-          tags: nitinkdocker18/Ecommerce:api
+          tags: nitinkdocker18/ecommerce:api
