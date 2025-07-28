@@ -4,52 +4,6 @@ const catchAsyncError = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apifeatures");
 const cloudinary = require("cloudinary");
 
-// exports.createProduct = catchAsyncError(async (req, res, next) => {
-//   let images = [];
-
-//   // Handle both string and array types for images
-//   if (typeof req.body.images === "string") {
-//     images.push(req.body.images);
-//   } else {
-//     images = req.body.images || [];
-//   }
-
-//   const imagesLinks = [];
-
-//   // Upload images to Cloudinary
-//   try {
-//     const uploadPromises = images.map((image) =>
-//       cloudinary.v2.uploader.upload(image, { folder: "products" })
-//     );
-
-//     const results = await Promise.all(uploadPromises);
-
-//     results.forEach((result) => {
-//       imagesLinks.push({
-//         public_id: result.public_id,
-//         url: result.secure_url,
-//       });
-//     });
-//   } catch (error) {
-//     return next(new ErrorHander("Failed to upload images", 500));
-//   }
-
-//   // Set imagesLinks in req.body
-//   req.body.images = imagesLinks;
-//   req.body.user = req.user.id;
-
-//   // Create the product in the database
-//   try {
-//     const product = await Product.create(req.body);
-
-//     res.status(201).json({
-//       success: true,
-//       product,
-//     });
-//   } catch (error) {
-//     return next(new ErrorHander("Product creation failed", 500));
-//   }
-// });
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   let images = [];
 
@@ -227,13 +181,11 @@ exports.createProductReview = catchAsyncError(async (req, res, next) => {
     rating: Number(rating),
     comment,
   };
-
   const product = await Product.findById(productId);
 
   const isReviewed = product.reviews.find(
     (rev) => rev.user.toString() === req.user._id.toString()
   );
-
   if (isReviewed) {
     product.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString())
@@ -245,13 +197,10 @@ exports.createProductReview = catchAsyncError(async (req, res, next) => {
   }
 
   let avg = 0;
-
   product.reviews.forEach((rev) => {
     avg += rev.rating;
   });
-
   product.ratings = avg / product.reviews.length;
-
   await product.save({ validateBeforeSave: false });
 
   res.status(200).json({

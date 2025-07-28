@@ -52,7 +52,6 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User registration failed", 500));
   }
 });
-
 // Login User
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
@@ -197,20 +196,17 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 
   sendToken(user, 200, res);
 });
-
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   const newUserData = {
     name: req.body.name,
     email: req.body.email,
+    role: req.body.role,
   };
-
   try {
     const user = await User.findById(req.user.id); // Retrieve the user once at the start
-
     // Check if a new avatar is provided in the request body
     if (req.body.avatar) {
       console.log("Avatar provided in request body:", req.body.avatar); // Debugging line
-
       // Ensure the user has an avatar before trying to delete it
       if (user.avatar && user.avatar.public_id) {
         console.log(
@@ -219,16 +215,13 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
         ); // Debugging line
         await cloudinary.v2.uploader.destroy(user.avatar.public_id);
       }
-
       // Upload the new avatar to Cloudinary
       const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
         folder: "avatars",
         width: 150,
         crop: "scale",
       });
-
       console.log("Cloudinary upload response:", myCloud); // Debugging line
-
       newUserData.avatar = {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
@@ -240,14 +233,12 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
         url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png", // Default avatar URL
       };
     }
-
     // Update the user's profile data in the database
     const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
       new: true,
       runValidators: true,
       useFindAndModify: false,
     });
-
     // Send response
     res.status(200).json({
       success: true,
