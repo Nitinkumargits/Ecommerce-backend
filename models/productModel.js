@@ -24,10 +24,13 @@ const productSchema = new mongoose.Schema({
       public_id: {
         type: String,
         required: true,
+        default: "products/mkpk0aneid3ijx6jvwb6",
       },
       url: {
         type: String,
         required: true,
+        default:
+          "https://res.cloudinary.com/dmsyppekz/image/upload/v1753684900/products/mkpk0aneid3ijx6jvwb6.jpg",
       },
     },
   ],

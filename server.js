@@ -1,10 +1,18 @@
+const cors = require("cors");
 const app = require("./app");
+
+app.use(
+  cors({
+    origin: "https://ecommerce-nitin.ved.yt",
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  })
+);
+app.options("*", cors()); //for all routes
+
 const dotenv = require("dotenv");
 const connectDatabase = require("./config/database");
 const cloudinary = require("cloudinary").v2;
-
-const cors = require("cors");
-app.use(cors());
 
 // Handling Uncaught Exception
 process.on("uncaughtException", (err) => {
