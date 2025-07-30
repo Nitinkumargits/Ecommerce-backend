@@ -76,34 +76,114 @@ const cloudinary = require("cloudinary");
 //   sendToken(user, 201, res);
 // });
 
-exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-  const { name, email, password, avatar } = req.body;
+// exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+//   const { name, email, password, avatar } = req.body;
 
-  // Default avatar data
+//   // Default avatar data
+//   let avatarData = {
+//     public_id: "default_avatar_public_id",
+//     url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
+//   };
+
+//   // Upload avatar if provided
+//   if (avatar) {
+//     try {
+//       const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+//         folder: "avatars",
+//         width: 150,
+//         crop: "scale",
+//       });
+
+//       avatarData = {
+//         public_id: myCloud.public_id,
+//         url: myCloud.secure_url,
+//       };
+//     } catch (err) {
+//       return next(new ErrorHandler("Avatar upload failed", 500));
+//     }
+//   }
+
+//   // Create user
+//   const user = await User.create({
+//     name,
+//     email,
+//     password,
+//     avatar: avatarData,
+//   });
+
+//   // Send JWT token in response
+//   sendToken(user, 201, res);
+// });
+// exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+//   const { name, email, password } = req.body;
+
+//   // Default avatar
+//   let avatarData = {
+//     public_id: "default_avatar_public_id",
+//     url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
+//   };
+
+//   // Upload avatar if file was uploaded
+//   if (req.file) {
+//     try {
+//       const base64Avatar = `data:${
+//         req.file.mimetype
+//       };base64,${req.file.buffer.toString("base64")}`;
+
+//       const myCloud = await cloudinary.v2.uploader.upload(base64Avatar, {
+//         folder: "avatars",
+//         width: 150,
+//         crop: "scale",
+//       });
+
+//       avatarData = {
+//         public_id: myCloud.public_id,
+//         url: myCloud.secure_url,
+//       };
+//     } catch (error) {
+//       return next(new ErrorHandler("Avatar upload failed", 500));
+//     }
+//   }
+
+//   // Create user with avatar
+//   const user = await User.create({
+//     name,
+//     email,
+//     password,
+//     avatar: avatarData,
+//   });
+
+//   sendToken(user, 201, res);
+// });
+
+exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+  const { name, email, password } = req.body;
+
   let avatarData = {
     public_id: "default_avatar_public_id",
     url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
   };
 
-  // Upload avatar if provided
-  if (avatar) {
+  if (req.file) {
     try {
-      const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+      const base64 = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      const uploadResult = await cloudinary.v2.uploader.upload(base64, {
         folder: "avatars",
         width: 150,
         crop: "scale",
       });
 
       avatarData = {
-        public_id: myCloud.public_id,
-        url: myCloud.secure_url,
+        public_id: uploadResult.public_id,
+        url: uploadResult.secure_url,
       };
     } catch (err) {
       return next(new ErrorHandler("Avatar upload failed", 500));
     }
   }
 
-  // Create user
   const user = await User.create({
     name,
     email,
@@ -111,9 +191,9 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     avatar: avatarData,
   });
 
-  // Send JWT token in response
   sendToken(user, 201, res);
 });
+
 // Login User
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
