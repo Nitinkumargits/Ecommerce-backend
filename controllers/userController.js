@@ -6,75 +6,75 @@ const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const cloudinary = require("cloudinary");
 
-exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-  const { name, email, password, avatar } = req.body;
-  console.log("req.body", req.body);
-
-  let avatarData = {
-    public_id: "default_avatar_public_id", // Default public_id in case no avatar is uploaded
-    url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png", // Default avatar URL
-  };
-
-  // If the user provides an avatar, attempt to upload it
-  if (avatar) {
-    try {
-      const myCloud = await cloudinary.uploader.upload(avatar, {
-        folder: "avatars",
-        width: 150,
-        crop: "scale",
-      });
-
-      avatarData = {
-        public_id: myCloud.public_id,
-        url: myCloud.secure_url,
-      };
-    } catch (error) {
-      return next(
-        new ErrorHandler("Avatar upload failed, please try again", 500)
-      );
-    }
-  }
-
-  console.log(name, email, password, avatar);
-
-  try {
-    // Create the user in the database with the avatar data
-    const user = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      avatar: avatarData || "",
-    });
-
-    // Send token if the user is created successfully
-    sendToken(user, 201, res);
-  } catch (error) {
-    return next(new ErrorHandler("User registration failed", 500));
-  }
-});
-
 // exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-//   const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-//     folder: "avatars",
-//     width: 150,
-//     crop: "scale",
-//   });
+//   const { name, email, password, avatar } = req.body;
+//   console.log("req.body", req.body);
 
-//   const { name, email, password } = req.body;
+//   let avatarData = {
+//     public_id: "default_avatar_public_id", // Default public_id in case no avatar is uploaded
+//     url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png", // Default avatar URL
+//   };
 
-//   const user = await User.create({
-//     name,
-//     email,
-//     password,
-//     avatar: {
-//       public_id: myCloud.public_id || "default_avatar_public_id",
-//       url:
-//         myCloud.secure_url ||
-//         "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
-//     },
-//   });
-//   sendToken(user, 201, res);
+//   // If the user provides an avatar, attempt to upload it
+//   if (avatar) {
+//     try {
+//       const myCloud = await cloudinary.uploader.upload(avatar, {
+//         folder: "avatars",
+//         width: 150,
+//         crop: "scale",
+//       });
+
+//       avatarData = {
+//         public_id: myCloud.public_id,
+//         url: myCloud.secure_url,
+//       };
+//     } catch (error) {
+//       return next(
+//         new ErrorHandler("Avatar upload failed, please try again", 500)
+//       );
+//     }
+//   }
+
+//   console.log(name, email, password, avatar);
+
+//   try {
+//     // Create the user in the database with the avatar data
+//     const user = await User.create({
+//       name: req.body.name,
+//       email: req.body.email,
+//       password: req.body.password,
+//       avatar: avatarData || "",
+//     });
+
+//     // Send token if the user is created successfully
+//     sendToken(user, 201, res);
+//   } catch (error) {
+//     return next(new ErrorHandler("User registration failed", 500));
+//   }
 // });
+
+exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+  const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+    folder: "avatars",
+    width: 150,
+    crop: "scale",
+  });
+
+  const { name, email, password } = req.body;
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    avatar: {
+      public_id: myCloud.public_id || "default_avatar_public_id",
+      url:
+        myCloud.secure_url ||
+        "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
+    },
+  });
+  sendToken(user, 201, res);
+});
 
 // exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 //   const { name, email, password, avatar } = req.body;
