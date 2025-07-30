@@ -156,6 +156,7 @@ const cloudinary = require("cloudinary");
 //   sendToken(user, 201, res);
 // });
 
+// User registration controller
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   const { name, email, password } = req.body;
 
@@ -164,26 +165,30 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
   };
 
+  // 👇 Upload the file to Cloudinary if provided
   if (req.file) {
     try {
-      const base64 = `data:${
+      const base64Image = `data:${
         req.file.mimetype
       };base64,${req.file.buffer.toString("base64")}`;
-      const uploadResult = await cloudinary.v2.uploader.upload(base64, {
-        folder: "avatars",
+
+      const myCloud = await cloudinary.v2.uploader.upload(base64Image, {
+        folder: "avatars", // ✅ Save inside "avatars" folder
         width: 150,
         crop: "scale",
       });
 
       avatarData = {
-        public_id: uploadResult.public_id,
-        url: uploadResult.secure_url,
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
       };
-    } catch (err) {
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
       return next(new ErrorHandler("Avatar upload failed", 500));
     }
   }
 
+  // Create new user in DB
   const user = await User.create({
     name,
     email,
