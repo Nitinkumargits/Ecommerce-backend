@@ -21,9 +21,10 @@ const {
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 
 // Register route now handles avatar uploads
-router.route("/register").post(upload.single("avatar"), registerUser);
-
 router.route("/login").post(loginUser);
+
+router.route("/register").post(registerUser);
+
 router.route("/logout").get(logout);
 router.route("/password/forgot").post(forgotPassword);
 router.route("/password/reset/:token").put(resetPassword);
