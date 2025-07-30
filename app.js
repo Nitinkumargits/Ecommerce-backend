@@ -7,6 +7,21 @@ const errorMiddleware = require("./middleware/error");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
 const path = require("path");
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      const allowed = [
+        "http://localhost:3000",
+        "https://ecommerce-nitin.ved.yt",
+      ];
+      if (!origin || allowed.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 // Middlewares
 app.use(express.json());
