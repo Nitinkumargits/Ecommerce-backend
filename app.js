@@ -9,19 +9,28 @@ const fileUpload = require("express-fileupload");
 const path = require("path");
 const cors = require("cors");
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://ecommerce-nitin.ved.yt",
+];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowed = [
-        "http://localhost:3000",
-        "https://ecommerce-nitin.ved.yt",
-      ];
-      if (!origin || allowed.includes(origin)) return callback(null, true);
-      callback(new Error("Not allowed by CORS"));
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
     },
-    credentials: true,
+    credentials: true, // ✅ Allow cookies to be sent
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+app.options("*", cors()); //for all routes
 
 // Middlewares
 app.use(express.json());
