@@ -33,20 +33,11 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 
-// app.use(
-//   cors({
-//     origin: "*", // Allow all origins
-//     credentials: true,
-//   })
-// );
 app.use(
   cors({
-    origin: "http://localhost:3000", // ✅ Only your frontend
-    credentials: true, // ✅ Allow cookies to be sent
+    origin: "*", // Allow all origins
   })
 );
-
-// app.options("*", cors());
 
 // Routes
 const product = require("./routes/productRoute");
