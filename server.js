@@ -1,25 +1,18 @@
 const cors = require("cors");
 const app = require("./app");
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://ecommerce-nitin.ved.yt",
-];
+const allowedOrigins = ["http://localhost:3000", "https://your-prod-site.com"];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
       } else {
-        return callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // ✅ Allow cookies to be sent
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 app.options("*", cors()); //for all routes
