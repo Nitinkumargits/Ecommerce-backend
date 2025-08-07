@@ -41,23 +41,24 @@ app.use(fileUpload());
 // );
 const allowedOrigins = [
   "http://localhost:3000",
-  " https://ecommerce-api-nitin.ved.yt",
+  // " https://ecommerce-api-nitin.ved.yt",
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    // origin: function (origin, callback) {
+    //   if (!origin || allowedOrigins.includes(origin)) {
+    //     callback(null, true);
+    //   } else {
+    //     callback(new Error("Not allowed by CORS"));
+    //   }
+    // },
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
 
-app.options("*", cors());
+// app.options("*", cors());
 
 // Routes
 const product = require("./routes/productRoute");
