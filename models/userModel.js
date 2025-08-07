@@ -61,7 +61,7 @@ userSchema.methods.getJWTToken = function () {
   });
 };
 
-// Compare Password
+// Compare Password // correctPassword
 
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
@@ -81,6 +81,19 @@ userSchema.methods.getResetPasswordToken = function () {
   this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
   return resetToken;
+};
+
+userSchema.methods.changePasswordAfter = function (JWTTimeStamp) {
+  if (this.createdAt) {
+    //if the password change property exist only then we want to do the comparision
+    const changeTimestamp = parseInt(this.createdAt.getTime() / 1000, 10);
+    return JWTTimeStamp < changeTimestamp;
+  }
+  /**
+   bydefault we return false from this method(mean the user has not change his password after the token was issued )
+   */
+  //false means user not change the password therefore return false
+  return false;
 };
 
 module.exports = mongoose.model("User", userSchema);

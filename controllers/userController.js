@@ -1,7 +1,7 @@
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const User = require("../models/userModel");
-const sendToken = require("../utils/jwtToken");
+const createSendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const cloudinary = require("cloudinary");
@@ -47,7 +47,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     });
 
     // Send token if the user is created successfully
-    sendToken(user, 201, res);
+    createSendToken(user, 201, req, res);
   } catch (error) {
     return next(new ErrorHandler("User registration failed", 500));
   }
@@ -75,12 +75,12 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
 
-  sendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 // Logout User
 exports.logout = catchAsyncErrors(async (req, res, next) => {
-  res.cookie("token", null, {
+  res.cookie("jwt", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
@@ -164,7 +164,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   await user.save();
 
-  sendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 // Get User Detail
@@ -196,7 +196,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 
   await user.save();
 
-  sendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   const newUserData = {
