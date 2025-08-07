@@ -13,6 +13,7 @@ const {
   updatePassword,
   updateProfile,
   getAllUser,
+  isGettingTokenToFrontEnd,
   getSingleUser,
   updateUserRole,
   deleteUser,
@@ -29,7 +30,9 @@ router.route("/logout").get(logout);
 router.route("/password/forgot").post(forgotPassword);
 router.route("/password/reset/:token").put(resetPassword);
 
-router.route("/me").get(isAuthenticatedUser, getUserDetails);
+router
+  .route("/me")
+  .get(isAuthenticatedUser, isGettingTokenToFrontEnd, getUserDetails);
 
 router.route("/password/update").put(isAuthenticatedUser, updatePassword);
 router

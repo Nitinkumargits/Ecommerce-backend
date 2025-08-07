@@ -47,7 +47,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     });
 
     // Send token if the user is created successfully
-    createSendToken(user, 201, req, res);
+    createSendToken(user, 201, res);
   } catch (error) {
     return next(new ErrorHandler("User registration failed", 500));
   }
@@ -75,7 +75,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
 
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });
 
 // Logout User
@@ -164,8 +164,13 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   await user.save();
 
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });
+
+exports.isGettingTokenToFrontEnd = (req, res) => {
+  console.log("Cookies received:", req.cookies); // log cookies
+  res.status(200).json({ success: true, user: req.user });
+};
 
 // Get User Detail
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
@@ -196,7 +201,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 
   await user.save();
 
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   const newUserData = {
