@@ -1,7 +1,10 @@
 const cors = require("cors");
 const app = require("./app");
 
-const allowedOrigins = ["http://localhost:3000", "https://your-prod-site.com"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://ecommerce-api-nitin.ved.yt",
+];
 
 app.use(
   cors({
