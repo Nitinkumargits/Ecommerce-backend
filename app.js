@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config({ path: "backend/config/config.env" });
 const app = express();
 const cookieParser = require("cookie-parser");
@@ -8,11 +9,55 @@ const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 
+// const allowedOrigins = [
+//   "https://ecommerce-api-nitin.ved.yt",
+//   "http://localhost:3000",
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
 // Middlewares
-app.use(express.json());
 app.use(cookieParser());
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
+
+// app.use(
+//   cors({
+//     origin: "*", // Allow all origins
+//     credentials: true,
+//   })
+// );
+const allowedOrigins = [
+  "http://localhost:3000",
+  " https://ecommerce-api-nitin.ved.yt",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
 
 // Routes
 const product = require("./routes/productRoute");

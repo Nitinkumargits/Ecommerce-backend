@@ -1,24 +1,4 @@
-const cors = require("cors");
 const app = require("./app");
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://ecommerce-api-nitin.ved.yt",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
-app.options("*", cors()); //for all routes
 
 const dotenv = require("dotenv");
 const connectDatabase = require("./config/database");

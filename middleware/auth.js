@@ -5,52 +5,20 @@ const User = require("../models/userModel");
 const { promisify } = require("util");
 
 exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
-  let token;
+  const { token } = req.cookies;
 
-  // 1. Get token from Authorization header or cookie
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  } else if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
+  // console.log("auth token in auth :", token);///got it
 
-  // 2. Check if token exists
   if (!token) {
-    return next(
-      new ErrorHander(
-        "You are not logged in! Please log in to get access.",
-        401
-      )
-    );
+    return res
+      .status(401)
+      .json({ message: "Please login to access this resource" });
   }
 
-  // 3. Verify token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
 
-  // 4. Check if user still exists
-  const currentUser = await User.findById(decoded.id);
-  if (!currentUser) {
-    return next(
-      new ErrorHander("The user belonging to this token no longer exists.", 401)
-    );
-  }
+  req.user = await User.findById(decodedData.id);
 
-  // 5. Check if user changed password after token was issued
-  if (currentUser.changePasswordAfter(decoded.iat)) {
-    return next(
-      new ErrorHander(
-        "User recently changed password! Please login again.",
-        401
-      )
-    );
-  }
-
-  // 6. Grant access
-  req.user = currentUser;
-  res.locals.user = currentUser;
   next();
 });
 

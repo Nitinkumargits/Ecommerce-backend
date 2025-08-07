@@ -168,14 +168,19 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isGettingTokenToFrontEnd = (req, res) => {
-  console.log("Cookies received:", req.cookies); // log cookies
+  // console.log("Cookies received:", req.cookies); // log cookies//got till here
   res.status(200).json({ success: true, user: req.user });
 };
 
 // Get User Detail
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
+  console.log("for token: getUserDetails :", req.user);
+
   const user = await User.findById(req.user.id);
-  console.log("for token:", user);
+
+  if (!user) {
+    return next(new ErrorHandler("Not get the current User 🙄 ", 400));
+  }
 
   res.status(200).json({
     success: true,
