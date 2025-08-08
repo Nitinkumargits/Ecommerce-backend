@@ -80,7 +80,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
 // Logout User
 exports.logout = catchAsyncErrors(async (req, res, next) => {
-  res.cookie("jwt", null, {
+  res.cookie("token", "", {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
@@ -167,16 +167,18 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
-exports.isGettingTokenToFrontEnd = (req, res) => {
-  // console.log("Cookies received:", req.cookies); // log cookies//got till here
-  res.status(200).json({ success: true, user: req.user });
+exports.isGettingTokenToFrontEnd = (req, res, next) => {
+  console.log("Cookies received [userController] :", req.cookies); // log cookies//got till here
+  // res.status(200).json({ success: true, user: req.user });
+  next();
 };
 
 // Get User Detail
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
-  console.log("for token: getUserDetails :", req.user);
+  // console.log("for token: getUserDetails :", req.user);//good
 
   const user = await User.findById(req.user.id);
+  console.log("user data [getUserDetails] :", user);
 
   if (!user) {
     return next(new ErrorHandler("Not get the current User 🙄 ", 400));
