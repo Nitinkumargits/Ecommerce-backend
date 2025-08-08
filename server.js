@@ -1,5 +1,5 @@
 const app = require("./app");
-
+const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDatabase = require("./config/database");
 const cloudinary = require("cloudinary").v2;
@@ -13,6 +13,30 @@ process.on("uncaughtException", (err) => {
 
 // Config
 dotenv.config();
+
+// const allowedOrigins = [
+//   "https://ecommerce-api-nitin.ved.yt",
+//   "http://localhost:3000",
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+app.use(
+  cors({
+    origin: "*", // allow all origins
+    credentials: true, // optional: allow cookies/auth headers, use carefully with "*"
+  })
+);
 
 // Database connection
 connectDatabase();
