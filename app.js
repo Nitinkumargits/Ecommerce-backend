@@ -9,12 +9,6 @@ const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 
-// Middlewares
-app.use(cookieParser());
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload());
-
 const allowedOrigins = [
   "https://ecommerce-api-nitin.ved.yt",
   "http://localhost:3000",
@@ -32,6 +26,12 @@ app.use(
     credentials: true,
   })
 );
+
+// Middlewares
+app.use(cookieParser());
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 // Routes
 const product = require("./routes/productRoute");
