@@ -11,26 +11,32 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://ecommerce-nitin.ved.yt",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // ✅ Allow cookies to be sent
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.options("*", cors()); //for all routes
+
 // Config
 dotenv.config();
 
-// const allowedOrigins = [
-//   "https://ecommerce-api-nitin.ved.yt",
-//   "http://localhost:3000",
-// ];
-
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//   })
-// );
 app.use(
   cors({
     origin: "*", // allow all origins
