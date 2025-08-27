@@ -7,17 +7,22 @@ const { promisify } = require("util");
 exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
   const { token } = req.cookies;
 
-  // console.log("auth token in auth :", token);///got it
-
   if (!token) {
     return res
       .status(401)
       .json({ message: "Please login to access this resource" });
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  let decodedData;
+  try {
+    decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res
+      .status(401)
+      .json({ message: "Invalid or expired token. Please login again." });
+  }
 
-  req.user = await User.findById(decodedData.id); //good
+  req.user = await User.findById(decodedData.id);
 
   next();
 });

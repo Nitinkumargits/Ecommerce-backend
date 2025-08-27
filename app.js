@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config({ path: "backend/config/config.env" });
+// Load environment variables from .env at project root
+require("dotenv").config();
 const app = express();
 const cookieParser = require("cookie-parser");
-const errorhander = require("./utils/errorhandler");
+const errorhandler = require("./utils/errorhandler");
 const errorMiddleware = require("./middleware/error");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
@@ -14,6 +15,18 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://ecommerce-nitin.ved.yt",
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Routes
 const product = require("./routes/productRoute");
@@ -37,7 +50,7 @@ if (process.env.NODE_ENV === "production") {
 
 // ❌ Catch-all for undefined API routes
 app.all("*", (req, res, next) => {
-  next(new errorhander(`Can't find ${req.originalUrl} on this server`, 404));
+  next(new errorhandler(`Can't find ${req.originalUrl} on this server`, 404));
 });
 
 // Global error handler

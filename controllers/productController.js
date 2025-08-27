@@ -1,5 +1,5 @@
 const Product = require("../models/productModel");
-const ErrorHander = require("../utils/errorhandler");
+const ErrorHander = require("../utils/ErrorHander");
 const catchAsyncError = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apifeatures");
 const cloudinary = require("cloudinary");
@@ -16,7 +16,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 
   // ❌ If no image provided
   if (!images || images.length === 0) {
-    return next(new ErrorHandler("No images provided", 400));
+    return next(new ErrorHander("No images provided", 400));
   }
 
   const imagesLinks = await Promise.all(

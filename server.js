@@ -1,6 +1,7 @@
-const app = require("./app");
-const cors = require("cors");
 const dotenv = require("dotenv");
+// Load env first so any module using process.env reads correct values
+dotenv.config();
+const app = require("./app");
 const connectDatabase = require("./config/database");
 const cloudinary = require("cloudinary").v2;
 
@@ -14,35 +15,26 @@ process.on("uncaughtException", (err) => {
 const allowedOrigins = [
   "http://localhost:3000",
   "https://ecommerce-nitin.ved.yt",
-];
+].concat(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : []);
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // ✅ Allow cookies to be sent
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-app.options("*", cors()); //for all routes
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin) return next();
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    return res.status(403).json({ error: "Not allowed by CORS" });
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+app.options("*", (req, res) => {
+  res.sendStatus(200);
+});
 
-// Config
-dotenv.config();
-
-app.use(
-  cors({
-    origin: "*", // allow all origins
-    credentials: true, // optional: allow cookies/auth headers, use carefully with "*"
-  })
-);
+// Config already loaded above
 
 // Database connection
 connectDatabase();
