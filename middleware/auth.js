@@ -2,37 +2,47 @@ const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("./catchAsyncErrors");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
-const { promisify } = require("util");
+
+const extractToken = (req) => {
+  if (req.cookies && req.cookies.token) return req.cookies.token;
+  const auth = req.headers.authorization || req.headers.Authorization;
+  if (auth && auth.startsWith("Bearer ")) return auth.slice(7);
+  return null;
+};
 
 exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
-  const { token } = req.cookies;
+  const token = extractToken(req);
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Please login to access this resource" });
+    return next(new ErrorHandler("Please login to access this resource", 401));
   }
 
-  let decodedData;
+  let decoded;
   try {
-    decodedData = jwt.verify(token, process.env.JWT_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
-    return res
-      .status(401)
-      .json({ message: "Invalid or expired token. Please login again." });
+    return next(
+      new ErrorHandler("Invalid or expired token. Please login again.", 401)
+    );
   }
 
-  req.user = await User.findById(decodedData.id);
+  const user = await User.findById(decoded.id);
+  if (!user) {
+    return next(
+      new ErrorHandler("The user belonging to this token no longer exists", 401)
+    );
+  }
 
+  req.user = user;
   next();
 });
 
 exports.authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       return next(
         new ErrorHandler(
-          `Role: ${req.user.role} is not allowed to access this resource`,
+          `Role: ${req.user ? req.user.role : "guest"} is not allowed to access this resource`,
           403
         )
       );

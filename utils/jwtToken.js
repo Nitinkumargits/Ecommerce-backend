@@ -6,25 +6,33 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
-
-  console.log("createSendToken :", token);
-
-  // options for cookie
-  const cookieOptions = {
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === "production";
+  return {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     expires: new Date(
       Date.now() +
         Number(process.env.JWT_COOKIE_EXPIRES_IN || 5) * 24 * 60 * 60 * 1000
     ),
   };
+};
+
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  // strip password from response payload
+  const safeUser = user.toObject ? user.toObject() : { ...user };
+  delete safeUser.password;
+  delete safeUser.resetPasswordToken;
+  delete safeUser.resetPasswordExpire;
 
   res
     .status(statusCode)
-    .cookie("token", token, cookieOptions)
-    .json({ success: true, token, user });
+    .cookie("token", token, getCookieOptions())
+    .json({ success: true, token, user: safeUser });
 };
 
 module.exports = createSendToken;
+module.exports.getCookieOptions = getCookieOptions;

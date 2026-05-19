@@ -1,7 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-// Load environment variables from .env at project root
-require("dotenv").config();
 const app = express();
 const cookieParser = require("cookie-parser");
 const errorhandler = require("./utils/errorhandler");

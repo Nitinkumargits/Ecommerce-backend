@@ -12,30 +12,6 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://ecommerce-nitin.ved.yt",
-].concat(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : []);
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (!origin) return next();
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  } else {
-    return res.status(403).json({ error: "Not allowed by CORS" });
-  }
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-app.options("*", (req, res) => {
-  res.sendStatus(200);
-});
-
-// Config already loaded above
-
 // Database connection
 connectDatabase();
 

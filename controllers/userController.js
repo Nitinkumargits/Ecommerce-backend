@@ -2,28 +2,45 @@ const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const User = require("../models/userModel");
 const createSendToken = require("../utils/jwtToken");
+const { getCookieOptions } = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const cloudinary = require("cloudinary");
 
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-  const { name, email, password, avatar } = req.body;
-  console.log("req.body", req.body);
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return next(new ErrorHandler("Name, email and password are required", 400));
+  }
+
+  if (await User.findOne({ email })) {
+    return next(new ErrorHandler("User with this email already exists", 409));
+  }
 
   let avatarData = {
-    public_id: "default_avatar_public_id", // Default public_id in case no avatar is uploaded
-    url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png", // Default avatar URL
+    public_id: "default_avatar_public_id",
+    url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png",
   };
 
-  // If the user provides an avatar, attempt to upload it
-  if (avatar) {
+  // Resolve avatar source: base64 string in body, OR file from express-fileupload
+  let avatarSource = null;
+  if (req.body.avatar && typeof req.body.avatar === "string") {
+    avatarSource = req.body.avatar;
+  } else if (req.files && req.files.avatar) {
+    const file = Array.isArray(req.files.avatar)
+      ? req.files.avatar[0]
+      : req.files.avatar;
+    avatarSource = `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+  }
+
+  if (avatarSource) {
     try {
-      const myCloud = await cloudinary.uploader.upload(avatar, {
+      const myCloud = await cloudinary.v2.uploader.upload(avatarSource, {
         folder: "avatars",
         width: 150,
         crop: "scale",
       });
-
       avatarData = {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
@@ -35,22 +52,14 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  console.log(name, email, password, avatar);
+  const user = await User.create({
+    name,
+    email,
+    password,
+    avatar: avatarData,
+  });
 
-  try {
-    // Create the user in the database with the avatar data
-    const user = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      avatar: avatarData || "",
-    });
-
-    // Send token if the user is created successfully
-    createSendToken(user, 201, res);
-  } catch (error) {
-    return next(new ErrorHandler("User registration failed", 500));
-  }
+  createSendToken(user, 201, res);
 });
 
 // Login User
@@ -80,10 +89,8 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
 // Logout User
 exports.logout = catchAsyncErrors(async (req, res, next) => {
-  res.cookie("token", "", {
-    expires: new Date(Date.now()),
-    httpOnly: true,
-  });
+  const opts = getCookieOptions();
+  res.cookie("token", "", { ...opts, expires: new Date(0) });
 
   res.status(200).json({
     success: true,
