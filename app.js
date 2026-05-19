@@ -14,7 +14,10 @@ app.use(express.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 app.use(
   fileUpload({
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10 MB binary file
+      fieldSize: 15 * 1024 * 1024, // 15 MB — base64 strings inflate ~1.33x
+    },
     abortOnLimit: true,
     responseOnLimit: "File too large. Max size is 10MB.",
   })

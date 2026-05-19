@@ -4,43 +4,65 @@ const catchAsyncError = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apifeatures");
 const cloudinary = require("cloudinary");
 
-exports.createProduct = catchAsyncError(async (req, res, next) => {
-  let images = [];
-
-  // ✅ Normalize images input (string or array)
-  if (typeof req.body.images === "string") {
-    images = [req.body.images];
-  } else if (Array.isArray(req.body.images)) {
-    images = req.body.images;
+// Convert image input (multipart file or base64 string) → base64 data URL
+const toDataUrl = (input) => {
+  if (typeof input === "string") return input;
+  if (input && input.data && input.mimetype) {
+    return `data:${input.mimetype};base64,${input.data.toString("base64")}`;
   }
+  return null;
+};
 
-  // ❌ If no image provided
-  if (!images || images.length === 0) {
+// Collect image inputs from either req.files.images (multipart) or req.body.images (string)
+const collectImageInputs = (req) => {
+  const inputs = [];
+  if (req.files && req.files.images) {
+    const files = Array.isArray(req.files.images)
+      ? req.files.images
+      : [req.files.images];
+    inputs.push(...files);
+  }
+  if (req.body.images) {
+    if (typeof req.body.images === "string") inputs.push(req.body.images);
+    else if (Array.isArray(req.body.images)) inputs.push(...req.body.images);
+  }
+  return inputs;
+};
+
+exports.createProduct = catchAsyncError(async (req, res, next) => {
+  const rawImages = collectImageInputs(req);
+
+  if (rawImages.length === 0) {
     return next(new ErrorHandler("No images provided", 400));
   }
 
-  const imagesLinks = await Promise.all(
-    images.map(async (image) => {
-      try {
-        const result = await cloudinary.v2.uploader.upload(image, {
-          folder: "products",
-        });
+  const imagesLinks = [];
+  for (const raw of rawImages) {
+    const source = toDataUrl(raw);
+    if (!source) continue;
+    try {
+      const result = await cloudinary.v2.uploader.upload(source, {
+        folder: "products",
+      });
+      imagesLinks.push({
+        public_id: result.public_id,
+        url: result.secure_url,
+      });
+    } catch (error) {
+      console.error("Cloudinary upload failed:", error?.message || error);
+      return next(
+        new ErrorHandler(
+          `Image upload failed: ${error?.message || "unknown error"}`,
+          500
+        )
+      );
+    }
+  }
 
-        return {
-          public_id: result.public_id,
-          url: result.secure_url,
-        };
-      } catch (error) {
-        // Optional fallback — though ideally you want the user to re-upload correctly
-        return {
-          public_id: "products/mkpk0aneid3ijx6jvwb6",
-          url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1753684900/products/mkpk0aneid3ijx6jvwb6.jpg",
-        };
-      }
-    })
-  );
+  if (imagesLinks.length === 0) {
+    return next(new ErrorHandler("No valid images provided", 400));
+  }
 
-  // ✅ Add images + user to product body
   req.body.images = imagesLinks;
   req.body.user = req.user.id;
 
@@ -91,7 +113,7 @@ exports.getAllProduct = catchAsyncError(async (req, res, next) => {
 
 // Get All Product (Admin)
 exports.getAdminProducts = catchAsyncError(async (req, res, next) => {
-  const products = await Product.find();
+  const products = await Product.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
