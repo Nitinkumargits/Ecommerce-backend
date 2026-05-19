@@ -10,9 +10,15 @@ const path = require("path");
 
 // Middlewares
 app.use(cookieParser());
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload());
+app.use(express.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+app.use(
+  fileUpload({
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    abortOnLimit: true,
+    responseOnLimit: "File too large. Max size is 10MB.",
+  })
+);
 app.use(
   cors({
     origin: [

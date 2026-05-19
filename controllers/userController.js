@@ -215,58 +215,47 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   const newUserData = {
     name: req.body.name,
     email: req.body.email,
-    role: req.body.role,
   };
-  try {
-    const user = await User.findById(req.user.id); // Retrieve the user once at the start
-    // Check if a new avatar is provided in the request body
-    if (req.body.avatar) {
-      console.log("Avatar provided in request body:", req.body.avatar); // Debugging line
-      // Ensure the user has an avatar before trying to delete it
-      if (user.avatar && user.avatar.public_id) {
-        console.log(
-          "Deleting old avatar from Cloudinary:",
-          user.avatar.public_id
-        ); // Debugging line
-        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
-      }
-      // Upload the new avatar to Cloudinary
-      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-        folder: "avatars",
-        width: 150,
-        crop: "scale",
-      });
-      console.log("Cloudinary upload response:", myCloud); // Debugging line
-      newUserData.avatar = {
-        public_id: myCloud.public_id,
-        url: myCloud.secure_url,
-      };
-    } else if (!user.avatar) {
-      // If no avatar is provided and the user doesn't have one, set a default avatar
-      newUserData.avatar = {
-        public_id: "default_avatar_public_id", // Replace with actual default public ID
-        url: "https://res.cloudinary.com/dmsyppekz/image/upload/v1727187600/Profile_gslglc.png", // Default avatar URL
-      };
-    }
-    // Update the user's profile data in the database
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    });
-    // Send response
-    res.status(200).json({
-      success: true,
-      user: updatedUser, // Return the updated user object
-    });
-  } catch (error) {
-    // Handle errors gracefully
-    console.error("Error updating profile:", error); // Log the error for debugging
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error", // Return a clear error message
-    });
+
+  const user = await User.findById(req.user.id);
+  if (!user) return next(new ErrorHandler("User not found", 404));
+
+  // Resolve incoming avatar: base64 string in body OR file from express-fileupload
+  let avatarSource = null;
+  if (req.body.avatar && typeof req.body.avatar === "string") {
+    avatarSource = req.body.avatar;
+  } else if (req.files && req.files.avatar) {
+    const file = Array.isArray(req.files.avatar)
+      ? req.files.avatar[0]
+      : req.files.avatar;
+    avatarSource = `data:${file.mimetype};base64,${file.data.toString("base64")}`;
   }
+
+  if (avatarSource) {
+    if (
+      user.avatar &&
+      user.avatar.public_id &&
+      user.avatar.public_id !== "default_avatar_public_id"
+    ) {
+      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+    }
+    const myCloud = await cloudinary.v2.uploader.upload(avatarSource, {
+      folder: "avatars",
+      width: 150,
+      crop: "scale",
+    });
+    newUserData.avatar = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    };
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({ success: true, user: updatedUser });
 });
 
 // Get all users(admin)

@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const upload = require("../middleware/multer"); // ✅ Import fixed multer config
-
 const {
   registerUser,
   loginUser,
@@ -33,9 +31,7 @@ router.route("/password/reset/:token").put(resetPassword);
 router.route("/me").get(isAuthenticatedUser, getUserDetails);
 
 router.route("/password/update").put(isAuthenticatedUser, updatePassword);
-router
-  .route("/me/update")
-  .put(isAuthenticatedUser, upload.single("avatar"), updateProfile);
+router.route("/me/update").put(isAuthenticatedUser, updateProfile);
 
 router
   .route("/admin/users")
